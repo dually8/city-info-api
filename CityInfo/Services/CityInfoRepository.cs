@@ -12,6 +12,7 @@ public class CityInfoRepository : ICityInfoRepository
     {
         _context = context;
     }
+
     public async Task<IEnumerable<City>> GetCitiesAsync()
     {
         return await _context.Cities
@@ -28,6 +29,7 @@ public class CityInfoRepository : ICityInfoRepository
                 .Where(c => c.Id == cityId)
                 .FirstOrDefaultAsync();
         }
+
         return await _context.Cities
             .Where(c => c.Id == cityId)
             .FirstOrDefaultAsync();
@@ -50,5 +52,24 @@ public class CityInfoRepository : ICityInfoRepository
     public async Task<bool> DoesCityExistAsync(int cityId)
     {
         return await _context.Cities.AnyAsync(c => c.Id == cityId);
+    }
+
+    public async Task AddPointOfInterestForCityAsync(int cityId, PointOfInterest pointOfInterest)
+    {
+        var city = await GetCityAsync(cityId, false);
+        if (city != null)
+        {
+            city.PointsOfInterest.Add(pointOfInterest);
+        }
+    }
+
+    public void DeletePointOfInterestForCity(PointOfInterest pointOfInterest)
+    {
+        _context.PointOfInterests.Remove(pointOfInterest);
+    }
+
+    public async Task<bool> SaveChangesAsync()
+    {
+        return (await _context.SaveChangesAsync() >= 0);
     }
 }
