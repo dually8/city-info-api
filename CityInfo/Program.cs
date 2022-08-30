@@ -1,10 +1,10 @@
-using System.Text.RegularExpressions;
+using System.Text;
 using CityInfo.API;
 using CityInfo.API.DbContexts;
 using CityInfo.API.Services;
-using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -32,15 +32,45 @@ builder.Services.AddTransient<IMailService, LocalMailService>();
 builder.Services.AddTransient<IMailService, CloudMailService>();
 #endif
 
-// DB Stuff
+// #region - DB stuff
 var dbConnectionString = builder.Configuration.GetValue<string>("ConnectionStrings:CityInfo");
 builder.Services.AddDbContext<CityInfoContext>(
     dbContextOptions => dbContextOptions.UseSqlite(dbConnectionString)
 );
 builder.Services.AddScoped<ICityInfoRepository, CityInfoRepository>();
+// #endregion - DB stuff
 
-// AutoMapper
+// #region - AutoMapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// #endregion - AutoMapper
+
+// #region - Authentication
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Authentication:Issuer"],
+            ValidAudience = builder.Configuration["Authentication:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(builder.Configuration["Authentication:SecretForKey"]))
+        };
+    });
+// #endregion - Authentication
+
+// #region - Authorization
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MustBeFromChattanooga", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("city", "Chattanooga");
+    });
+});
+// #endregion - Authorization
 
 var app = builder.Build();
 
@@ -53,6 +83,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
