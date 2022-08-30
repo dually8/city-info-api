@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Text.Json;
+using AutoMapper;
 using CityInfo.API.Models;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ namespace CityInfo.API.Controllers
     {
         private readonly ICityInfoRepository _repository;
         private readonly IMapper _mapper;
+        private const int maxCitiesPageSize = 20;
 
         public CitiesController(
             ICityInfoRepository repository,
@@ -26,10 +28,31 @@ namespace CityInfo.API.Controllers
         /// </summary>
         /// <returns>List of cities</returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CityWithoutPointsOfInterestDto>>> GetCities()
+        public async Task<ActionResult<IEnumerable<CityWithoutPointsOfInterestDto>>> GetCities(
+            // The attribute and name is unnecessary here
+            // but this shows how you can use it.
+            // Name = "XXX" tells us what the query param will be
+            // e.g. api/cities?XXX=something
+            [FromQuery(Name = "name")] string? name,
+            string? searchQuery,
+            int pageNumber = 1,
+            int pageSize = 10
+        )
         {
-            var cityEntities = await _repository.GetCitiesAsync();
+            if (pageSize > maxCitiesPageSize)
+            {
+                pageSize = maxCitiesPageSize;
+            }
+
+            var (cityEntities, paginationMetadata) = await _repository.GetCitiesAsync(
+                name,
+                searchQuery,
+                pageNumber,
+                pageSize
+            );
             var cityDtos = _mapper.Map<IEnumerable<CityWithoutPointsOfInterestDto>>(cityEntities);
+            
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
             return Ok(cityDtos);
         }
 
