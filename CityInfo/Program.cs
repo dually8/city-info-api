@@ -1,8 +1,10 @@
 using System.Text.RegularExpressions;
 using CityInfo.API;
+using CityInfo.API.DbContexts;
 using CityInfo.API.Services;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -30,12 +32,18 @@ builder.Services.AddTransient<IMailService, LocalMailService>();
 builder.Services.AddTransient<IMailService, CloudMailService>();
 #endif
 
+// DB Stuff
+var dbConnectionString = builder.Configuration.GetValue<string>("ConnectionStrings:CityInfo");
+builder.Services.AddDbContext<CityInfoContext>(
+    dbContextOptions => dbContextOptions.UseSqlite(dbConnectionString)
+);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.Logger.LogInformation($"DbConnectionString: {dbConnectionString}");
     app.UseSwagger();
     app.UseSwaggerUI();
 }
