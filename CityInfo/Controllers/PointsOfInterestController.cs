@@ -7,9 +7,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfo.API.Controllers;
 
-[Route("api/cities/{cityId}/pointsofinterest")]
+[Route("api/v{version:apiVersion}/cities/{cityId}/pointsofinterest")]
 [ApiController]
-[Authorize(Policy = "MustBeFromChattanooga")] // See Authorization region in Program.cs
+// [Authorize(Policy = "MustBeFromChattanooga")] // See Authorization region in Program.cs
+[ApiVersion("2.0")]
 public class PointsOfInterestController : Controller
 {
     private readonly ILogger<PointsOfInterestController> _logger;

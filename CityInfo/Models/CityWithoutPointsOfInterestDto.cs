@@ -1,5 +1,8 @@
 ﻿namespace CityInfo.API.Models;
 
+/// <summary>
+/// A Dto for a city without points of interest
+/// </summary>
 public class CityWithoutPointsOfInterestDto
 {
     public int Id { get; set; }

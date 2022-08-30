@@ -8,6 +8,8 @@ namespace CityInfo.API.Controllers;
 
 [Route("api/authentication")]
 [ApiController]
+[ApiVersion("1.0")]
+[ApiVersion("2.0")]
 public class AuthenticationController : Controller
 {
     private readonly IConfiguration _configuration;

@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CityInfo.API.Controllers
 {
-    [Route("api/cities")]
+    [Route("api/v{version:apiVersion}/cities")]
     [ApiController]
-    [Authorize]
+    // [Authorize]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class CitiesController : ControllerBase
     {
         private readonly ICityInfoRepository _repository;
@@ -60,11 +62,17 @@ namespace CityInfo.API.Controllers
 
         /// <summary>
         /// Route: api/cities/{id}[?includePointsOfInterest=true]
+        /// Get a city by its id
         /// </summary>
         /// <param name="id">Id of the city</param>
         /// <param name="includePointsOfInterest">Do or do not include points of interest</param>
-        /// <returns>CityWithoutPointsOfInterestDto</returns>
+        /// <returns>IActionResult</returns>
+        /// <response code="200">Returns the requested city</response>
+        /// <response code="404">Could not find city</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetCity(
             int id,
             bool includePointsOfInterest = false
